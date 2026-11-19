@@ -10,10 +10,17 @@ public final class GraphicsPresetsTest {
         check(GraphicsPresets.preserve(performance, performance, personal).equals(personal));
         Map<String,String> changed = new HashMap<>(battery); changed.put("aa","fxaa");
         check(GraphicsPresets.preserve(changed, battery, personal).equals(changed));
-        for (int i=0;i<4;++i) {
+        for (int i=0;i<5;++i) {
             check(GraphicsPresets.values(i).size()==6);
             check(!GraphicsPresets.values(i).containsKey("graphics_api") && !GraphicsPresets.values(i).containsKey("language"));
         }
+        Map<String,String> adreno = GraphicsPresets.values(4);
+        check("1280x720".equals(adreno.get("resolution")));
+        check("30".equals(adreno.get("fps")));
+        check("apagado".equals(adreno.get("aa")));
+        check("2".equals(adreno.get("shadows")));
+        check("2".equals(adreno.get("car_reflections")));
+        check("false".equals(adreno.get("road_reflection")));
         System.out.println("Presets: personal values survive consecutive presets; manual changes become the next snapshot; API and language untouched.");
     }
 }
