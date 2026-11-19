@@ -764,11 +764,12 @@ public final class MainActivity extends Activity {
 
     private void chooseProfile() {
         boolean saved = GameOptions.prefs(this).getBoolean("preset_has_backup", false);
-        String[] names = saved ? new String[]{"Batería", "Equilibrado", "Rendimiento", "Calidad", "Mis ajustes guardados"}
+        String[] names = saved ? new String[]{"Batería", "Equilibrado", "Rendimiento", "Calidad", "Adreno 610 · 30 FPS", "Mis ajustes guardados"}
                 : GraphicsPresets.NAMES;
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert).setTitle("Perfil gráfico")
                 .setItems(names, (dialog, which) -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                        .setTitle(names[which]).setMessage(which == 4 ? "Se recuperarán tus seis ajustes gráficos guardados."
+                        .setTitle(names[which]).setMessage(which == 5 ? "Se recuperarán tus seis ajustes gráficos guardados."
+                                : which == 4 ? "Perfil experimental para Adreno 610: conserva 1280×720 y limita el objetivo a 30 FPS, con efectos secundarios reducidos. El resultado real depende del dispositivo y del juego."
                                 : "Se ajustarán resolución, FPS, antialiasing, sombras y reflejos. Se guardarán tus valores personales para recuperarlos. El resultado depende del dispositivo; no hay mediciones de ahorro ni FPS para este perfil.")
                         .setPositiveButton("Aplicar al próximo inicio", (confirm, button) -> applyProfile(which))
                         .setNegativeButton("Cancelar", null).show())
@@ -777,7 +778,7 @@ public final class MainActivity extends Activity {
 
     private void applyProfile(int profile) {
         SharedPreferences prefs = GameOptions.prefs(this);
-        java.util.Map<String,String> next = profile == 4 ? profileValues("preset_backup_") : GraphicsPresets.values(profile);
+        java.util.Map<String,String> next = profile == 5 ? profileValues("preset_backup_") : GraphicsPresets.values(profile);
         // Validate against the launcher's actual options before changing any preference.
         for (java.util.Map.Entry<String,String> entry : next.entrySet()) {
             if (!java.util.Arrays.asList(GameOptions.find(entry.getKey()).values).contains(entry.getValue())) {
@@ -785,7 +786,7 @@ public final class MainActivity extends Activity {
             }
         }
         SharedPreferences.Editor edit = prefs.edit();
-        if (profile != 4) {
+        if (profile != 5) {
             java.util.Map<String,String> previous = prefs.getBoolean("preset_has_backup", false) ? profileValues("preset_backup_") : null;
             java.util.Map<String,String> backup = GraphicsPresets.preserve(profileValues(""), profileValues("preset_applied_"), previous);
             for (java.util.Map.Entry<String,String> entry : backup.entrySet()) edit.putString("preset_backup_" + entry.getKey(), entry.getValue());
