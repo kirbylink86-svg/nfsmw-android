@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <dlfcn.h>
 #include <cstdio>
+#include <SDL3/SDL.h>
 
 #define LOG_TAG "NFSMW-Native-Diagnostics"
 
@@ -81,8 +82,12 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_nfsmw_diagnostics_MainActivity_nativeGetVulkanStatus(
     JNIEnv* env, jobject) {
     const char* status = vulkan_status();
-    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", status);
-    return env->NewStringUTF(status);
+    static char combined[320];
+    std::snprintf(combined, sizeof(combined),
+                  "SDL3 nativo: versión %u. Vulkan: %s",
+                  SDL_GetVersion(), status);
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", combined);
+    return env->NewStringUTF(combined);
 }
 
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
