@@ -36,26 +36,29 @@ static const char* vulkan_status() {
 
     auto create_instance = reinterpret_cast<PFN_vkCreateInstance>(
         get_proc(VK_NULL_HANDLE, "vkCreateInstance"));
-    auto destroy_instance = reinterpret_cast<PFN_vkDestroyInstance>(
-        get_proc(VK_NULL_HANDLE, "vkDestroyInstance"));
-    auto enumerate_devices = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
-        get_proc(VK_NULL_HANDLE, "vkEnumeratePhysicalDevices"));
-
-    if (!create_instance || !destroy_instance || !enumerate_devices) {
+    if (create_instance == nullptr) {
         dlclose(library);
-        return "Vulkan: faltan funciones esenciales del cargador.";
+        return "Vulkan: vkCreateInstance no está disponible.";
     }
 
     VkInstance instance = VK_NULL_HANDLE;
     VkResult result = create_instance(&create, nullptr, &instance);
     if (result != VK_SUCCESS) {
-        char message[128];
-        std::snprintf(message, sizeof(message),
+        char* output = new char[128];
+        std::snprintf(output, 128,
                       "Vulkan: no se pudo crear instancia (código %d).", result);
         dlclose(library);
-        static char output[128];
-        std::snprintf(output, sizeof(output), "%s", message);
         return output;
+    }
+
+    auto destroy_instance = reinterpret_cast<PFN_vkDestroyInstance>(
+        get_proc(instance, "vkDestroyInstance"));
+    auto enumerate_devices = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
+        get_proc(instance, "vkEnumeratePhysicalDevices"));
+    if (destroy_instance == nullptr || enumerate_devices == nullptr) {
+        if (destroy_instance != nullptr) destroy_instance(instance, nullptr);
+        dlclose(library);
+        return "Vulkan: faltan funciones de instancia después de crearla.";
     }
 
     uint32_t count = 0;
