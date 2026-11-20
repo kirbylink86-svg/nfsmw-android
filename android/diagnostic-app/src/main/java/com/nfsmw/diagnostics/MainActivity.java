@@ -6,6 +6,7 @@ import android.view.Gravity;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -22,7 +23,7 @@ public final class MainActivity extends Activity implements SurfaceHolder.Callba
         status.setGravity(Gravity.CENTER);
         status.setTextSize(16);
         status.setPadding(24, 24, 24, 24);
-        status.setText("DIAGNÓSTICO SDL3 + VULKAN\n\nEsperando la superficie Android...");
+        status.setText("DIAGNÓSTICO SDL3 + VULKAN\\n\\nEsperando la superficie Android...");
 
         SurfaceView surfaceView = new SurfaceView(this);
         surfaceView.getHolder().addCallback(this);
@@ -32,13 +33,13 @@ public final class MainActivity extends Activity implements SurfaceHolder.Callba
         layout.addView(status, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
         layout.addView(surfaceView, new LinearLayout.LayoutParams(
-                LinearLayout.MATCH_PARENT, 240));
+                ViewGroup.LayoutParams.MATCH_PARENT, 240));
         setContentView(layout);
 
         try {
             System.loadLibrary("nfsmw_native_diagnostics");
         } catch (UnsatisfiedLinkError error) {
-            status.setText("ERROR AL CARGAR LA BIBLIOTECA NATIVA\n\n" + error.getMessage());
+            status.setText("ERROR AL CARGAR LA BIBLIOTECA NATIVA\\n\\n" + error.getMessage());
         }
     }
 
@@ -47,10 +48,10 @@ public final class MainActivity extends Activity implements SurfaceHolder.Callba
         if (probeStarted) return;
         probeStarted = true;
         try {
-            status.setText("DIAGNÓSTICO SDL3 + VULKAN\n\n" +
+            status.setText("DIAGNÓSTICO SDL3 + VULKAN\\n\\n" +
                     nativeRunDiagnostics(holder.getSurface()));
         } catch (UnsatisfiedLinkError error) {
-            status.setText("ERROR EN LA PRUEBA NATIVA\n\n" + error.getMessage());
+            status.setText("ERROR EN LA PRUEBA NATIVA\\n\\n" + error.getMessage());
         }
     }
 
