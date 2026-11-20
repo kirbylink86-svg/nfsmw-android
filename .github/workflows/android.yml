@@ -40,11 +40,11 @@ jobs:
           git -C "$destination" checkout --detach 147a8ee32dbf9ac02f3794964490687b6bbda1bc
           test -f "$destination/android-project/app/src/main/java/org/libsdl/app/SDLActivity.java"
 
-      - name: Validate Gradle project configuration
+      - name: Compile Android Java and resources (without native game build)
         working-directory: android
-        run: ./gradlew --no-daemon help
+        run: ./gradlew --no-daemon :app:compileDebugJavaWithJavac
 
       - name: Report scope
         run: |
-          echo "Android Gradle configuration and SDLActivity source are present."
-          echo "This workflow intentionally does not invoke CMake, ReXGlue code generation, or package a game APK."
+          echo "Android resources and Java sources, including SDLActivity, compiled successfully."
+          echo "This is a compile check only: it does not invoke CMake, ReXGlue code generation, or produce a playable game APK."
