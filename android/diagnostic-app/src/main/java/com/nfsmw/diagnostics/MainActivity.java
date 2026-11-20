@@ -6,6 +6,8 @@ import android.widget.TextView;
 import android.view.Gravity;
 
 public final class MainActivity extends Activity {
+    private static native String nativeGetVulkanStatus();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -15,9 +17,10 @@ public final class MainActivity extends Activity {
         status.setPadding(32, 32, 32, 32);
         try {
             System.loadLibrary("nfsmw_native_diagnostics");
-            status.setText("DIAGNÓSTICO ARM64\n\nBiblioteca nativa cargada.\nRevisa Logcat con la etiqueta NFSMW-Native-Diagnostics para el estado de Vulkan.");
+            String vulkan = nativeGetVulkanStatus();
+            status.setText("DIAGNÓSTICO ARM64\n\nBiblioteca nativa cargada correctamente.\n\n" + vulkan);
         } catch (UnsatisfiedLinkError error) {
-            status.setText("ERROR AL CARGAR LA BIBLIOTECA NATIVA\n\n" + error.getMessage());
+            status.setText("ERROR AL CARGAR O EJECUTAR LA BIBLIOTECA NATIVA\n\n" + error.getMessage());
         }
         setContentView(status);
     }
