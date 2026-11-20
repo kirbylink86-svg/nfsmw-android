@@ -153,14 +153,8 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_nfsmw_diagnostics_MainActivity_nativeRunDiagnostics(
     JNIEnv* env, jobject, jobject java_surface) {
     char sdl_status[128] = {};
-    if (SDL_Init(SDL_INIT_EVENTS)) {
-        std::snprintf(sdl_status, sizeof(sdl_status),
-                      "SDL3: inicialización correcta (versión %u).", SDL_GetVersion());
-        SDL_Quit();
-    } else {
-        std::snprintf(sdl_status, sizeof(sdl_status),
-                      "SDL3: error de inicialización: %.80s", SDL_GetError());
-    }
+    std::snprintf(sdl_status, sizeof(sdl_status),
+                  "SDL3: biblioteca cargada (versión %u).", SDL_GetVersion());
 
     if (!java_surface) {
         char message[320];
