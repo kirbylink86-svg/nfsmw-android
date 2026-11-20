@@ -44,8 +44,8 @@ static const char* vulkan_status() {
     VkInstance instance = VK_NULL_HANDLE;
     VkResult result = create_instance(&create, nullptr, &instance);
     if (result != VK_SUCCESS) {
-        char* output = new char[128];
-        std::snprintf(output, 128,
+        static char output[128];
+        std::snprintf(output, sizeof(output),
                       "Vulkan: no se pudo crear instancia (código %d).", result);
         dlclose(library);
         return output;
