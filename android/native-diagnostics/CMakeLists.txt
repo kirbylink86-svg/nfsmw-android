@@ -23,6 +23,7 @@ endif()
 add_subdirectory("${SDL_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/sdl3" EXCLUDE_FROM_ALL)
 
 find_library(ANDROID_LOG_LIBRARY log REQUIRED)
+find_library(ANDROID_LIBRARY android REQUIRED)
 find_library(ANDROID_VULKAN_LIBRARY vulkan REQUIRED)
 
 add_library(nfsmw_native_diagnostics SHARED native_diagnostics.cpp)
@@ -31,5 +32,6 @@ target_compile_options(nfsmw_native_diagnostics PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(nfsmw_native_diagnostics PRIVATE
   SDL3::SDL3-shared
   ${ANDROID_LOG_LIBRARY}
+  ${ANDROID_LIBRARY}
   ${ANDROID_VULKAN_LIBRARY}
 )
