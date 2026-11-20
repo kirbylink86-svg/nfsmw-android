@@ -27,7 +27,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0 ndk;28.2.13676358 cmake;3.30.5'
 
       - name: Restore pinned SDL3 Android Java project
         shell: bash
@@ -44,7 +44,26 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon :app:compileDebugJavaWithJavac
 
+      - name: Configure isolated Android ARM64 native diagnostics
+        run: |
+          set -euo pipefail
+          cmake -S android/native-diagnostics -B out/native-diagnostics \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-26 \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build isolated Android ARM64 native diagnostics
+        run: cmake --build out/native-diagnostics --parallel 2
+
+      - name: Upload native diagnostics library
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-native-diagnostics-arm64
+          path: out/native-diagnostics/libnfsmw_native_diagnostics.so
+          if-no-files-found: error
+
       - name: Report scope
         run: |
-          echo "Android resources and Java sources, including SDLActivity, compiled successfully."
-          echo "This is a compile check only: it does not invoke CMake, ReXGlue code generation, or produce a playable game APK."
+          echo "Android Java/resources and isolated ARM64 native diagnostics compiled successfully."
+          echo "The diagnostic library checks Vulkan loader linkage; it is not the game and does not produce a playable APK."
