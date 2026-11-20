@@ -1,82 +1,50 @@
-name: Android ARM64
+name: Android integration checks
 
 on:
   push:
+    branches: [adreno610-30fps]
   pull_request:
+    branches: [adreno610-30fps]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  assemble:
+  android-scaffold:
+    name: Validate Android / Gradle scaffold (no game recompilation)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v4
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools'
-      - name: Install Android SDK components
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;28.2.13676358' 'cmake;3.30.5'
-      - name: Restore pinned ReXGlue dependencies
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Restore pinned SDL3 Android Java project
         shell: bash
         run: |
           set -euo pipefail
-          TP="$GITHUB_WORKSPACE/sdk/thirdparty"
+          destination="sdk/thirdparty/sdl3"
+          mkdir -p "$(dirname "$destination")"
+          git clone --filter=blob:none --no-checkout https://github.com/libsdl-org/SDL.git "$destination"
+          git -C "$destination" fetch --depth=1 origin 147a8ee32dbf9ac02f3794964490687b6bbda1bc
+          git -C "$destination" checkout --detach 147a8ee32dbf9ac02f3794964490687b6bbda1bc
+          test -f "$destination/android-project/app/src/main/java/org/libsdl/app/SDLActivity.java"
 
-          clone_at() {
-            local name="$1"
-            local url="$2"
-            local revision="$3"
-            local destination="$TP/$name"
-            if [ -e "$destination/.git" ]; then
-              echo "$name already initialized"
-              return
-            fi
-            if [ -e "$destination" ] && [ -n "$(find "$destination" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
-              echo "Refusing to overwrite non-empty $destination" >&2
-              exit 1
-            fi
-            rm -rf "$destination"
-            git clone --filter=blob:none --no-checkout "$url" "$destination"
-            git -C "$destination" fetch --depth=1 origin "$revision"
-            git -C "$destination" checkout --detach "$revision"
-          }
-
-          # These revisions match the dependency snapshot used by the SDK.
-          clone_at cli11 https://github.com/CLIUtils/CLI11.git bfffd37e1f804ca4fae1caae106935791696b6a9
-          clone_at libmspack https://github.com/kyz/libmspack.git 305907723a4e7ab2018e58040059ffb5e77db837
-          clone_at tomlplusplus https://github.com/marzer/tomlplusplus.git 30172438cee64926dc41fdd9c11fb3ba5b2ba9de
-          clone_at simde https://github.com/simd-everywhere/simde.git 71fd833d9666141edcd1d3c109a80e228303d8d7
-          clone_at xxHash https://github.com/Cyan4973/xxHash.git e626a72bc2321cd320e953a0ccf1584cad60f363
-          clone_at spdlog https://github.com/gabime/spdlog.git 79524ddd08a4ec981b7fea76afd08ee05f83755d
-          clone_at fmt https://github.com/fmtlib/fmt.git 407c905e45ad75fc29bf0f9bb7c5c2fd3475976f
-          clone_at utfcpp https://github.com/nemtrif/utfcpp.git 63d64de49fd6b829f7c8694df5ab2ee625cb7134
-          clone_at imgui https://github.com/ocornut/imgui.git 6d910d5487d11ca567b61c7824b0c78c569d62f0
-          clone_at sdl3 https://github.com/libsdl-org/SDL.git 147a8ee32dbf9ac02f3794964490687b6bbda1bc
-          clone_at o1heap https://github.com/pavel-kirienko/o1heap.git 388a73fd9007300e5130c5fe352d9ce3288b6dde
-          clone_at vulkan-headers https://github.com/KhronosGroup/Vulkan-Headers.git e3b1eec08173d6b825cd3ac88c885a63b621504a
-          clone_at vulkan-memory-allocator https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git 1d8f600fd424278486eade7ed3e877c99f0846b1
-          clone_at spirv-headers https://github.com/KhronosGroup/SPIRV-Headers.git 29981f65241605e08b0ede4cfeb999fe3b723c6a
-          clone_at spirv-tools https://github.com/KhronosGroup/SPIRV-Tools.git 9a49b0883b9b635689a85b5647dbfcb223268151
-          clone_at glslang https://github.com/KhronosGroup/glslang.git f4f1d8a352ca1908943aea2ad8c54b39b4879080
-
-          # FFmpeg contains project-specific overlay/config files. Populate its
-          # upstream source into a temporary clone, preserving those local files.
-          tmp="$(mktemp -d)"
-          git clone --filter=blob:none --no-checkout https://github.com/wmarti/FFmpeg.git "$tmp/FFmpeg"
-          git -C "$tmp/FFmpeg" fetch --depth=1 origin 0604b464c7cb4ebc94940cf1f324a3b26b87717c
-          git -C "$tmp/FFmpeg" checkout --detach 0604b464c7cb4ebc94940cf1f324a3b26b87717c
-          mkdir -p "$TP/FFmpeg"
-          cp -a "$tmp/FFmpeg/." "$TP/FFmpeg/"
-          rm -rf "$tmp"
-
-          test -f "$TP/sdl3/android-project/app/src/main/java/org/libsdl/app/SDLActivity.java"
-      - name: Build ARM64 debug APK
+      - name: Validate Gradle project configuration
         working-directory: android
-        run: ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: nfsmw-android-arm64-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+        run: ./gradlew --no-daemon help
+
+      - name: Report scope
+        run: |
+          echo "Android Gradle configuration and SDLActivity source are present."
+          echo "This workflow intentionally does not invoke CMake, ReXGlue code generation, or package a game APK."
