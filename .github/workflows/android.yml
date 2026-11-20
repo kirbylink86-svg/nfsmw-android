@@ -63,6 +63,17 @@ jobs:
           path: out/native-diagnostics/libnfsmw_native_diagnostics.so
           if-no-files-found: error
 
+      - name: Assemble standalone native diagnostics APK
+        working-directory: android
+        run: ./gradlew --no-daemon :diagnostic-app:assembleDebug
+
+      - name: Upload standalone native diagnostics APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: nfsmw-native-diagnostics-apk
+          path: android/diagnostic-app/build/outputs/apk/debug/diagnostic-app-debug.apk
+          if-no-files-found: error
+
       - name: Report scope
         run: |
           echo "Android Java/resources and isolated ARM64 native diagnostics compiled successfully."
